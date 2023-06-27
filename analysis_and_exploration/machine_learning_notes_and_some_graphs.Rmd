@@ -1,0 +1,98 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+gdp_growth_clean <- read_csv("clean_data/clean_gdp_percentage_growth.csv")
+
+gdp_growth_clean
+```
+
+```{r}
+clean_exports <- read_csv("clean_data/clean_exports_by_business_size.csv")
+
+clean_exports
+```
+
+```{r}
+# joined by country_code and year
+gdp_growth_exports <- full_join(gdp_growth_clean, clean_exports)
+
+gdp_growth_exports %>% 
+  filter(developed == TRUE,
+         year == 2008) %>% 
+  count(country_name)
+```
+
+```{r}
+#gdp growth / year 1980-2017
+gdp_growth_exports %>%
+  filter(developed == TRUE,
+         year > 1980) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_gdp_growth = mean(gdp_growth, na.rm = TRUE)) %>% 
+  ggplot() + 
+  aes(x = year, y = av_gdp_growth, fill = united_kingdom ) +
+  geom_col(position = "dodge", colour = "black") +
+  scale_fill_discrete(name = "Developed Economies", labels = 
+                          c("Other Developed Countries", "United Kingdom")) + 
+  scale_x_continuous(breaks = seq(1980, 2017, 2)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=0.3))
+```
+
+```{r}
+## exports of some developed countries versus the UK.
+
+gdp_growth_exports %>% 
+  filter(!is.na(exports_value_in_dollars),
+         developed == TRUE,
+         year != 2017) %>% 
+  # select(country_name, exports_value_in_dollars, year)
+  group_by(united_kingdom, year) %>% 
+  summarise(av_exports = mean(exports_value_in_dollars, na.rm = TRUE)) %>% 
+  ggplot() +
+  aes(x = year, y = av_exports, colour = united_kingdom) +
+  geom_point(size = 4, shape = 17) +
+  geom_line() +
+  scale_fill_continuous(name = "Developed Economies", labels = 
+                          c("Other Developed Countries", "United Kingdom")) + 
+  scale_x_continuous(breaks = seq(1980, 2016, 1)) +
+  theme_bw() 
+  
+```
+
+```{r}
+
+gdp_growth_exports %>% 
+  filter(!is.na(exports_value_in_dollars),
+         developed == TRUE,
+         year != 2017) %>% 
+  # select(country_name, exports_value_in_dollars, year)
+  group_by(united_kingdom, year) %>%
+  summarise(av_exports = mean(exports_value_in_dollars, na.rm = TRUE)) %>% 
+  ggplot() +
+  aes(x = year, y = av_exports, colour = united_kingdom) +
+  geom_line()
+
+```
+
+## machine learning
+
+-  Exports of goods and services represent the value of all goods and other market services provided to the rest of the world. They include the value of merchandise, freight, insurance, transport, travel, royalties, license fees, and other services, such as communication, construction, financial, information, business, personal, and government services. They exclude compensation of employees and investment income (formerly called factor services) and transfer payments. Data are in current U.S. dollars.
+
+-  Imports of goods and services represent the value of all goods and other market services received from the rest of the world. They include the value of merchandise, freight, insurance, transport, travel, royalties, license fees, and other services, such as communication, construction, financial, information, business, personal, and government services. They exclude compensation of employees and investment income (formerly called factor services) and transfer payments. Data are in current U.S. dollars.
+
+- population - yes
+
+- Foreign Direct Investment (FDI) - Foreign direct investment refers to direct investment equity flows in the reporting economy. It is the sum of equity capital, reinvestment of earnings, and other capital. Direct investment is a category of cross-border investment associated with a resident in one economy having control or a significant degree of influence on the management of an enterprise that is resident in another economy. Ownership of 10 percent or more of the ordinary shares of voting stock is the criterion for determining the existence of a direct investment relationship. Data are in current U.S. dollars.
+
+- federal government expenditure, - expense data
+
+- oil revenue -  Oil rents are the difference between the value of crude oil production at regional prices and total costs of production.
+
+foreign exchange rates data - yes Official exchange rate refers to the exchange rate determined by national authorities or to the rate determined in the legally sanctioned exchange market. It is calculated as an annual average based on monthly averages (local currency units relative to the U.S. dollar).
+
+making up 7 predictors while GDP is the response variable.
+

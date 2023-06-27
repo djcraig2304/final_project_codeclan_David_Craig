@@ -1,0 +1,535 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#libraries
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(ggrepel)
+
+#data
+gdp_growth <- read_excel("../raw_data/Growth Of Output.xls") 
+
+exports_by_business_size <- read_excel("../raw_data/Exports by business size - OECD.xlsx")
+
+global_competitiveness <- read_excel("../raw_data/Global Competitiveness Dataset.xlsx", "Data")
+
+uk_gdp_estimates_time_series <- read_excel("../raw_data/UK GDP Estimates - Time Series.xlsx")
+
+global_financial_development <- read_excel("../raw_data/Global Financial Development.xlsx", "Data - July 2018")
+
+gdp_domestic_indicators <- read_csv("../raw_data/world_bank_data_gdp_domestic_indicator.csv")
+
+worldwide_exports <- read_csv("../raw_data/worldwide_exports.csv")
+
+worldwide_expenses <- read_csv("../raw_data/worldwide_expense.csv")
+
+population_worldwide <- read_csv("../raw_data/worldwide_populations.csv")
+
+foreign_direct_investment <- read_csv("../raw_data/foreign_investments.csv")
+
+exchange_rates <- read_csv("../raw_data/exchange_rates.csv")
+  
+oil_revenue <- read_csv("../raw_data/oil_rents.csv")
+
+
+
+
+
+
+```
+ gdp_growth <- read_excel("raw_data/Growth Of Output.xls") 
+
+exports_by_business_size <- read_excel("raw_data/Exports by business size - OECD.xlsx")
+
+global_competitiveness <- read_excel("raw_data/Global Competitiveness Dataset.xlsx", "Data")
+
+uk_gdp_estimates_time_series <- read_excel("raw_data/UK GDP Estimates - Time Series.xlsx")
+
+
+#gdp_growth_cleaning
+#created a developed column based on FTSE list of developed market countries
+clean_gdp_percentage_growth <- gdp_growth %>% 
+  filter(!row_number() %in% c(1, 2)) %>% 
+  row_to_names(row_number = 1) %>% 
+  clean_names() %>% 
+  select(-indicator_name, -indicator_code) %>% 
+  mutate(across(c(x1960:x2018), .fns = as.numeric)) %>% 
+  mutate(developed = if_else(
+    country_name %in% c("Australia", "Austria", "Belgium", "Canada","Denmark", 
+                        "Finland", "France", "Germany", "Hong Kong", 
+                        "Ireland", "Israel", "Italy", "Japan", "Luxembourg", 
+                        "Netherlands", "New Zealand", "Norway", "Poland", "Portugal",
+                        "Singapore", "South Korea", "Spain", "Sweden", "Switzerland",
+                        "United Kingdom", "United States"), TRUE, FALSE),
+    united_kingdom = if_else(country_name %in% "United Kingdom", TRUE, FALSE),
+    .after = country_code) %>% 
+  pivot_longer(cols = x1960:x2018, names_to = "year", values_to = "gdp_growth") %>% 
+  mutate(year = str_remove(year, "x"))
+
+write_csv(clean_gdp_percentage_growth, "clean_data/clean_gdp_percentage_growth.csv")
+
+
+# exports_by_business_size_cleaning
+clean_exports_by_business_size <- exports_by_business_size %>% 
+  clean_names() %>% 
+  select(location, subject, time, value) %>% 
+  rename(country_code = location,
+         exports_value_in_dollars = value,
+         year = time, 
+         employee_number = subject) 
+ 
+## Data Set 1 - Cleaning
+
+This will help answer question 1
+```{r}
+clean_gdp_percentage_growth <- gdp_growth %>% 
+  filter(!row_number() %in% c(1, 2)) %>% 
+  row_to_names(row_number = 1) %>% 
+  clean_names() %>% 
+  select(-indicator_name, -indicator_code) %>% 
+  mutate(across(c(x1960:x2018), .fns = as.numeric))
+
+clean_gdp_percentage_growth %>% 
+  summary() # there are some Na's in the data indicating missing financial info, this should be investigated further. 264 rows
+
+# this file contains information for each country of the world for gdp grwoth ranging from the 1960's to 2017.
+
+# can be used to answer first point "How does the UK compare to other developed economies in terms of GDP and exports?" although more information regarding exports is required. 
+
+clean_gdp_percentage_growth %>% 
+  count(country_name) # 264 countries
+
+clean_gdp_percentage_growth %>% 
+  dim() # 61 cols
+
+# write file as CSV - CSV can be converted into SQL data base easier.
+```
+
+## Data Set 2 - cleaning 
+This will help answer question 1
+```{r}
+
+# exports by business soze from 2008 to 2016, for 38 countries, value is in dollars, could maybe convert to pounds?
+
+clean_exports_by_business_size <- exports_by_business_size %>% 
+  clean_names() %>% 
+  select(location, subject, time, value) %>% 
+  rename(country_code = location,
+         value_in_dollars = value)
+
+```
+
+
+
+```{r}
+exports_by_business_size %>% 
+  clean_names() %>% 
+  count(subject) # 5 categories relating to the size of the business, could potentially convert these into factors for use in predictive analysis. 
+
+exports_by_business_size %>% 
+  clean_names() %>% 
+  count(frequency) # this can be dropped
+
+exports_by_business_size %>% 
+  clean_names() %>% 
+  count(indicator) #this can also be dropped
+
+exports_by_business_size %>% 
+  clean_names() %>% 
+  count(measure) #this can also be dropped
+
+exports_by_business_size %>% 
+  clean_names() %>% 
+  count(flag_codes) # this can probably also be dropped, although the signifcance of this is unclear.
+```
+```{r}
+exports_by_business_size %>% 
+  clean_names() %>% 
+  count(flag_codes) # this can probably also be dropped, although the signifcance of this is unclear.
+```
+
+# ## Data Set 3 - cleaning 
+
+```{r}
+
+clean_global_competitiveness_market_size <- global_competitiveness %>% 
+  select(-c(1:8)) %>% 
+  filter(row_number() != 1) %>% 
+  rename("Attribute" = ...9 ) %>% 
+  mutate(Attribute = ifelse(is.na(Attribute), "country_code", Attribute),
+         Attribute = ifelse(Attribute == "Attribute", "country", Attribute)) %>% 
+  # row_to_names(row_number = 1) %>% 
+  filter(row_number() %in% c(1, 2, 895:897)) %>% 
+  t() %>% 
+  as.tibble() %>% 
+  row_to_names(row_number = 1) %>% 
+  clean_names()
+
+clean_global_competitiveness_market_size
+  
+```
+
+## Data set 4 Cleaning
+
+```{r}
+uk_gdp_estimates_time_series %>% 
+  names()
+```
+
+```{r}
+#gdp average per head for the UK year on year growth rate CP SA% is seasonally adjusted, current prices 
+# CP: Current Prices, where data are presented in terms of the prices of the time period being estimated (that is, not adjusted for inflation).
+# SA = Seasonally Adjusted
+
+
+uk_gdp_estimates_time_series %>% 
+  select(Title, "GDP (Average) per head at market prices, year on year growth rate CP SA %",  "Gross Domestic Product (Income) current basic prices index SA", "Deflator: Exports, growth Q on Q yr ago",
+         "Gross Domestic Product (Income) chained volume index: SA", "GDP Deflator: Year on Year growth: SA %...684", "GDP Deflator: Quarter on quarter growth: SA %...685") %>% 
+  filter(row_number()!= 1:6)
+```
+
+## Cleaning Script 4
+
+```{r}
+clean_global_financial_development <- global_financial_development %>% 
+  select(c(iso3, country, region, income, year, ny_gdp_mktp_cd, ny_gnp_mktp_cd,
+           sp_pop_totl)) %>% 
+  rename(country_code = iso3,
+         gdp = ny_gdp_mktp_cd,
+         gnp = ny_gnp_mktp_cd,
+         total_population = sp_pop_totl,
+         country_name = country) %>% 
+  mutate(developed = if_else(
+    country_name %in% c("Australia", "Austria", "Belgium", "Canada","Denmark", 
+                        "Finland", "France", "Germany", "Hong Kong", 
+                        "Ireland", "Israel", "Italy", "Japan", "Luxembourg", 
+                        "Netherlands", "New Zealand", "Norway", "Poland", "Portugal",
+                        "Singapore", "South Korea", "Spain", "Sweden", "Switzerland",
+                        "United Kingdom", "United States"), TRUE, FALSE),
+    united_kingdom = if_else(country_name %in% "United Kingdom", TRUE, FALSE),
+    .after = country_code) %>% 
+  mutate(gdp_per_capita = gdp/total_population)
+```
+```{r}
+# how does the UK compare to other countries in terms of GDP in 2017? 
+# 4th out of the 24 developed economies
+clean_global_financial_development %>% 
+  filter(developed == TRUE,
+         year == 2017) %>%
+  ggplot() +
+  aes(x = reorder(country_name, gdp), y = gdp) +
+  geom_bar(stat = "identity") +
+  coord_flip()
+
+```
+
+```{r}
+# how does the UK compare to other countries in terms of GDP in 2017? 
+# 4th out of the developed economies
+#gdp per capita shows we are 17 from 24 developed economies 
+clean_global_financial_development %>% 
+  filter(developed == TRUE,
+         year == 2017) %>%
+  ggplot() +
+  aes(x = reorder(country_name, gdp_per_capita), y = gdp_per_capita) +
+  geom_bar(stat = "identity") +
+  coord_flip()
+
+```
+
+```{r}
+#how does the uk compare per capita to countries with smaller populations?
+clean_global_financial_development %>% 
+  filter(developed == TRUE,
+         year == 2017,
+         total_population <= 66000000) %>% 
+ ggplot() +
+  aes(x = reorder(country_name, gdp_per_capita), y = gdp_per_capita) +
+  geom_bar(stat = "identity") +
+  coord_flip()
+  
+```
+
+```{r}
+clean_global_financial_development %>% 
+  filter(developed == TRUE) %>% 
+  group_by(country_name, year) %>% 
+  summarise(av_gdp = mean(gdp, na.rm = TRUE)) %>% 
+  arrange(desc(av_gdp)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp, colour = country_name) +
+  geom_point()+
+  geom_line() +
+  geom_label_repel(
+    data =. %>% filter(year == 2017),
+                       
+    aes(label = country_name),
+             na.rm = TRUE,
+    nudge_x = 15,
+    nudge_y = 50,
+    max.overlaps = 40) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+# how has the uk compared histrorical to the average of all other developed countries per capita?
+clean_global_financial_development %>% 
+  filter(developed == TRUE) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_gdp_per_capita = mean(gdp_per_capita, na.rm = TRUE)) %>% 
+  arrange(desc(av_gdp_per_capita)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp_per_capita, colour = united_kingdom) +
+  geom_line() +
+  geom_point() 
+```
+
+```{r}
+# how does the uk compare historically to other countries gdp ?
+clean_global_financial_development %>% 
+  filter(developed == TRUE) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_gdp = mean(gdp, na.rm = TRUE)) %>% 
+  arrange(desc(av_gdp)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp, colour = united_kingdom) +
+  geom_line() +
+  geom_point()
+```
+
+```{r}
+
+
+clean_gdp_dom_ind <- gdp_domestic_indicators %>% 
+  clean_names() %>% 
+  filter(indicator_code %in% c("NV.AGR.TOTL.ZS", "NV.IND.TOTL.ZS", "NV.IND.MANF.ZS", "NV.SRV.TOTL.ZS")) %>% 
+  pivot_longer(cols = x1960:x2022, names_to = "year", values_to = "perc_of_gdp") %>% 
+  select(-x68) %>% 
+  mutate(year = str_remove(year, "x"),
+         developed = if_else(
+    country_name %in% c("Australia", "Austria", "Belgium", "Canada","Denmark", 
+                        "Finland", "France", "Germany", "Hong Kong", 
+                        "Ireland", "Israel", "Italy", "Japan", "Luxembourg", 
+                        "Netherlands", "New Zealand", "Norway", "Poland", "Portugal",
+                        "Singapore", "South Korea", "Spain", "Sweden", "Switzerland",
+                        "United Kingdom", "United States"), TRUE, FALSE),
+    united_kingdom = if_else(country_name %in% "United Kingdom", TRUE, FALSE),
+    .after = country_code)
+
+
+
+```
+
+```{r}
+# not great dataset to worm out gdp percentages in spending.
+clean_gdp_dom_ind %>% 
+  filter(developed == TRUE,
+         !is.na(perc_of_gdp)) %>% 
+  select(country_name, perc_of_gdp, year) %>% 
+  group_by(country_name, year) %>% 
+  count()
+  
+  
+  
+
+```
+## machine learning
+
+-  Exports of goods and services represent the value of all goods and other market services provided to the rest of the world. They include the value of merchandise, freight, insurance, transport, travel, royalties, license fees, and other services, such as communication, construction, financial, information, business, personal, and government services. They exclude compensation of employees and investment income (formerly called factor services) and transfer payments. Data are in current U.S. dollars.
+
+-  Imports of goods and services represent the value of all goods and other market services received from the rest of the world. They include the value of merchandise, freight, insurance, transport, travel, royalties, license fees, and other services, such as communication, construction, financial, information, business, personal, and government services. They exclude compensation of employees and investment income (formerly called factor services) and transfer payments. Data are in current U.S. dollars.
+
+- population - yes
+
+- Foreign Direct Investment (FDI) - Foreign direct investment refers to direct investment equity flows in the reporting economy. It is the sum of equity capital, reinvestment of earnings, and other capital. Direct investment is a category of cross-border investment associated with a resident in one economy having control or a significant degree of influence on the management of an enterprise that is resident in another economy. Ownership of 10 percent or more of the ordinary shares of voting stock is the criterion for determining the existence of a direct investment relationship. Data are in current U.S. dollars.
+
+- federal government expenditure, - expense data
+
+- oil revenue -  Oil rents are the difference between the value of crude oil production at regional prices and total costs of production.
+
+foreign exchange rates data - yes Official exchange rate refers to the exchange rate determined by national authorities or to the rate determined in the legally sanctioned exchange market. It is calculated as an annual average based on monthly averages (local currency units relative to the U.S. dollar).
+
+making up 7 predictors while GDP is the response variable.
+
+
+```{r}
+
+
+worldwide_exports <- read_csv("../raw_data/worldwide_exports.csv")
+
+worldwide_expenses <- read_csv("../raw_data/worldwide_expense.csv")
+
+population_worldwide <- read_csv("../raw_data/worldwide_populations.csv")
+
+foreign_direct_investment <- read_csv("../raw_data/foreign_investments.csv")
+
+exchange_rates <- read_csv("../raw_data/exchange_rates.csv")
+  
+oil_revenue <- read_csv("../raw_data/oil_rents.csv")
+
+labour_force <- read_csv("../raw_data/labour_force.csv")
+
+unemployment_rate <- read_csv("../raw_data/unemploment_rate.csv")
+
+poverty_headcount_ratio <- read_csv("../raw_data/poverty_headcount_ratio.csv")
+
+gdp_worldwide <- read_csv("../raw_data/worldwide_gdp.csv")
+
+gdp_growth_worldwide <- read_csv("../raw_data/gdp_growth_worldwide.csv")
+
+
+```
+
+
+
+
+```{r}
+clean_world_bank_data <- function(db){
+  
+  db %>% 
+  filter(row_number() != c(1:3)) %>% 
+  row_to_names(row_number = 1) %>% 
+  clean_names() %>% 
+  select(-indicator_code) %>% 
+  mutate(across(c(x1960:x2022), .fns = as.numeric)) %>% 
+  mutate(developed = if_else(
+    country_name %in% c("Australia", "Austria", "Belgium", "Canada","Denmark", 
+                        "Finland", "France", "Germany", "Hong Kong", 
+                        "Ireland", "Israel", "Italy", "Japan", "Luxembourg", 
+                        "Netherlands", "New Zealand", "Norway", "Poland", "Portugal",
+                        "Singapore", "South Korea", "Spain", "Sweden", "Switzerland",
+                        "United Kingdom", "United States"), TRUE, FALSE),
+    united_kingdom = if_else(country_name %in% "United Kingdom", TRUE, FALSE),
+    .after = country_code) %>% 
+  pivot_longer(cols = x1960:x2022, names_to = "year", values_to = "kpi_units") %>% 
+  mutate(year = str_remove(year, "x"))
+  
+}
+
+# expenses cleaning
+expenses_clean <- clean_world_bank_data(worldwide_expenses)
+```
+
+```{r}
+
+# expenses cleaning
+expenses_clean <- clean_world_bank_data(worldwide_expenses) %>% 
+  rename(expense_perc_gdp = kpi_units) %>% 
+  select(-indicator_name)
+
+# exports cleaning
+exports_clean <- clean_world_bank_data(worldwide_exports) %>% 
+  rename(exports_usd = kpi_units) %>% 
+  select(-indicator_name)
+
+# oil revenue cleaning
+oil_revenue_clean <- clean_world_bank_data(oil_revenue) %>% 
+  rename(oil_rents_perc_gdp = kpi_units) %>% 
+  select(-indicator_name)
+
+# population cleaning
+population_clean <- clean_world_bank_data(population_worldwide) %>% 
+  rename(total_population = kpi_units) %>% 
+  select(-indicator_name)
+
+# fdi cleanining
+foreign_investments_clean <- clean_world_bank_data(foreign_direct_investment) %>% 
+  rename(foreign_investment_usd = kpi_units) %>% 
+  select(-indicator_name)
+
+# exchange rates cleaning
+exchange_rates_clean <- clean_world_bank_data(exchange_rates) %>% 
+  rename(exchange_rate_lcu_usd = kpi_units) %>% 
+  select(-indicator_name)
+
+# labour force cleaning 
+labour_force_clean <- clean_world_bank_data(labour_force) %>% 
+  rename(labour_force_total = kpi_units) %>% 
+  select(-indicator_name)
+
+# poverty_headcount_ratio cleaning
+poverty_headcount_ratio_clean <- clean_world_bank_data(poverty_headcount_ratio) %>% 
+  rename(poverty_headcount_ratio_perc_pop = kpi_units) %>% 
+  select(-indicator_name)
+
+# unemployment rate cleaning
+unemployment_rate_clean <- clean_world_bank_data(unemployment_rate) %>% 
+  rename(unemployment_perc_labour_force_total = kpi_units) %>% 
+  select(-indicator_name)
+
+# gdp cleaning
+gdp_clean <- clean_world_bank_data(gdp_worldwide) %>% 
+  rename(gdp_usd = kpi_units) %>% 
+  select(-indicator_name)
+
+# gdp growth clean 
+gdp_growth_clean <- clean_world_bank_data(gdp_growth_worldwide) %>% 
+  rename(annual_gdp_growth = kpi_units) %>% 
+  select(-indicator_name)
+  
+  
+
+```
+
+
+```{r}
+all_kpis_worldwide_1 <- full_join(expenses_clean, exports_clean) 
+all_kpis_worldwide_2 <- full_join(all_kpis_worldwide_1, oil_revenue_clean)
+all_kpis_worldwide_3 <- full_join(all_kpis_worldwide_2, population_clean)
+all_kpis_worldwide_4 <- full_join(all_kpis_worldwide_3, foreign_investments_clean)
+all_kpis_worldwide_5 <- full_join(all_kpis_worldwide_4, exchange_rates_clean)
+all_kpis_worldwide_6 <- full_join(all_kpis_worldwide_5, labour_force_clean)
+all_kpis_worldwide_7 <- full_join(all_kpis_worldwide_6, poverty_headcount_ratio_clean)
+all_kpis_worldwide_8 <- full_join(all_kpis_worldwide_7, unemployment_rate_clean)
+all_kpis_worldwide_9 <- full_join(all_kpis_worldwide_8, gdp_clean)
+all_kpis_worldwide_final <- full_join(all_kpis_worldwide_9, gdp_growth_clean)
+
+
+all_kpis_worldwide <- all_kpis_worldwide_final %>% 
+  relocate(c(gdp_usd, annual_gdp_growth, total_population), .after = year) %>% 
+  mutate(year = as.numeric(year))
+```
+
+
+```{r}
+all_kpis_worldwide %>% 
+  mutate(date = make_datetime(year), .after = year)
+```
+
+```{r}
+productivity_gdp_hour_worked <- read_csv("../raw_data/gdp_hour_worked_productivity.csv")
+
+
+productivity_gdp_hour_worked %>% 
+  distinct(SUBJECT)
+
+productivity_gdp_hour_worked <- productivity_gdp_hour_worked %>% 
+  rename(country_code = LOCATION,
+         gdp_hr_wrkd_usd = Value,
+         year = TIME) %>% 
+  clean_names() %>% 
+  select(country_code, year, gdp_hr_wrkd_usd)
+  
+```
+
+```{r}
+productivity_gdp_hour_worked %>% 
+  count(country_code)
+  
+```
+
+```{r}
+full_join(deloitte_gdp_kpis, productivity_gdp_hour_worked) %>% 
+  filter(!is.na(country_name),
+         ) %>% 
+  
+```
+
+
+
+

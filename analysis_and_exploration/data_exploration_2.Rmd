@@ -1,0 +1,322 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(ggrepel)
+
+
+deloitte_all_kpis <- read_csv("../clean_data/deloitte_gdp_kpis.csv")
+
+```
+
+
+```{r}
+# add this to cleaning script later
+
+deloitte_all_kpis %>% 
+  filter(developed == TRUE) %>% 
+  count(country_name)
+
+```
+
+
+## Question how does the uk compare to other developed economies in terms of productivity?
+
+The UK is 16th out of 23 developed economies with available data. 
+
+```{r}
+
+deloitte_all_kpis %>% 
+   filter(developed == TRUE,
+          year == 2021,
+          !is.na(gdp_hr_wrkd_usd)) %>% 
+  ggplot() +
+  aes(x = reorder(country_code, gdp_hr_wrkd_usd), y = gdp_hr_wrkd_usd, fill = united_kingdom == TRUE) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Developed Economies Labour Productivity in 2021",
+       y = "GDP per hours worked in US Dollars",
+       x = "Country") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.3),
+        axis.title = element_text(size=14,face="bold")) +
+  scale_fill_manual(values = c("FALSE" = "grey",
+                               "TRUE" = "#86BC25")) +
+  theme_bw() 
+
+```
+The UK is 16th out of 17 developed economies with available data. 
+```{r}
+deloitte_all_kpis %>% 
+   filter(developed == TRUE,
+          year == 2021,
+          !is.na(mfp_annual_growth_rate_res)) %>% 
+  ggplot() +
+  aes(x = reorder(country_code, mfp_annual_growth_rate_res), y = mfp_annual_growth_rate_res, fill = united_kingdom == TRUE) +
+  geom_col(show.legend = FALSE) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.3)) +
+  labs(title = "Developed Economies Multifactor Productivity Growth Rate in 2021",
+       y = "Multifactor Productivity Growth Rate",
+       x = "Country") +
+  scale_fill_manual(values = c("FALSE" = "grey",
+                               "TRUE" = "#86BC25")) +
+  theme_bw() 
+```
+
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         !is.na(mfp_annual_growth_rate_res),
+         year >= 1995 & year < 2022) %>% 
+         # country_code %in% c("USA", "JPN", "DEU", "GBR", "FRA", "ITA", "CAN", 
+         #                     "AUS", "ESP", "NLD", "CHE")) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_mfp_annual_growth_rate_res = mean(mfp_annual_growth_rate_res, na.rm = TRUE)) %>% 
+  ggplot() +
+  aes(x = year, y = av_mfp_annual_growth_rate_res, fill = united_kingdom) +
+  geom_col(width = 0.8, position = position_dodge(0.8), colour = "black") +
+  # geom_point(show.legend = FALSE) +
+  # geom_line() +
+  scale_fill_discrete(name = "Developed Economies", labels = 
+                           c("Other Developed Countries", "United Kingdom")) + 
+  scale_x_continuous(breaks = seq(1995, 2021, 2)) +
+  labs(title = "Developed Economies Multifactor Productivity Growth Rate 1995 - 2021",
+       y = "Multifactor Productivity Growth Rate",
+       x = "Country") +
+  scale_fill_manual(name = "Developed Economies",
+                    labels = c("Average Developed", "United Kingdom"), 
+                    values = c("FALSE" = "grey", "TRUE" = "#86BC25")) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+  
+```
+MFP for the UK is greater than average in the 1990s and 2000s, drops after 2008 financial crisis,
+follows a similar trend to average but has not recovered fully after the COVID pandemic
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         !is.na(gdp_hr_wrkd_usd),
+         year >= 1995 & year < 2022) %>% 
+         # country_code %in% c("USA", "JPN", "DEU", "GBR", "FRA", "ITA", "CAN", 
+         #                     "AUS", "ESP", "NLD", "CHE")) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_gdp_hr_wrkd_usd = mean(gdp_hr_wrkd_usd, na.rm = TRUE)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp_hr_wrkd_usd, colour = united_kingdom) +
+  # geom_col(width = 0.8, position = position_dodge(0.8), colour = "black") +
+  geom_point(show.legend = FALSE, size = 4, shape = 17) +
+  geom_line(size = 1) +
+  # scale_fill_discrete(name = "Developed Economies", labels = 
+  #                          c("Other Developed Countries", "United Kingdom")) + 
+  scale_x_continuous(breaks = seq(1995, 2021, 2)) +
+  labs(title = "Developed Economies Labour Productivity 1995 - 2021",
+       y = "GDP per hours worked in US Dollars",
+       x = "Year",
+       colour  = "Developed Economies")  +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_colour_manual(values = c("grey", "#86BC25"),
+                      labels = c("Other Developed Countries", "United Kingdom")) 
+```
+
+
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         year == 2021) %>%
+  ggplot() +
+  aes(x = reorder(country_name, gdp_usd), y = gdp_usd, fill = united_kingdom == TRUE) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "GDP of Developed Countries in 2021",
+       y = "GDP in USD",
+       x = "Countries") +
+  # scale_y_continuous(labels = scales::comma) +
+  theme_bw() +
+  scale_fill_manual(values = c("FALSE" = "grey",
+                               "TRUE" = "#86BC25")) 
+```
+
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         !is.na(gdp_usd),
+         year >= 1995 & year < 2022) %>% 
+  group_by(united_kingdom, country_name, year) %>% 
+  summarise(av_gdp = mean(gdp_usd, na.rm = TRUE)) %>% 
+  arrange(desc(av_gdp)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp, colour = country_name) +
+  geom_point()+
+  geom_line() +
+  geom_label_repel(
+    data =. %>% filter(united_kingdom ==TRUE, year == 2021),
+                       
+    aes(label = "United Kingdom"),
+             na.rm = TRUE,
+    nudge_x = 15,
+    nudge_y = 18,
+     max.overlaps = 40) 
+  # scale_y_continuous(labels = scales::comma)
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         !is.na(gdp_usd),
+         year >= 1995 & year < 2022) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_gdp = mean(gdp_usd, na.rm = TRUE)) %>% 
+  arrange(desc(av_gdp)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp, colour = united_kingdom) +
+  geom_point(size = 4, shape = 17)+
+  geom_line(size = 1) +
+  labs(title = "Developed Economies GDP 1995 - 2021",
+       y = "GDP in US Dollars",
+       x = "Year",
+       colour  = "Developed Economies")  +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_colour_manual(values = c("grey", "#86BC25"),
+                      labels = c("Average of Other Countries", "United Kingdom")) +
+  scale_x_continuous(breaks = seq(1995, 2021, 2))
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         !is.na(gdp_per_capita_usd),
+         year >= 1995 & year < 2022) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_gdp_per_capita = mean(gdp_per_capita_usd, na.rm = TRUE)) %>% 
+  arrange(desc(av_gdp_per_capita)) %>% 
+  ggplot() +
+  aes(x = year, y = av_gdp_per_capita, colour = united_kingdom) +
+  geom_point(size = 4, shape = 17)+
+  geom_line(size = 1) +
+  labs(title = "Developed Economies GDP per Capita 1995 - 2021",
+       y = "GDP per Capita in USD",
+       x = "Year",
+       colour  = "Developed Economies")  +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_colour_manual(values = c("grey", "#86BC25"),
+                      labels = c("Average of Other Countries", "United Kingdom")) +
+  scale_x_continuous(breaks = seq(1995, 2021, 2))
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         year == 2021) %>%
+  ggplot() +
+  aes(x = reorder(country_name, gdp_per_capita_usd), y = gdp_per_capita_usd, fill = united_kingdom == TRUE) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "GDP per Capita of Developed Economies in 2021",
+       y = "GDP per Capita USD",
+       x = "Countries") +
+  # scale_y_continuous(labels = scales::comma) +
+  theme_bw() +
+  scale_fill_manual(values = c("FALSE" = "grey",
+                               "TRUE" = "#86BC25")) +
+  scale_y_continuous(labels = scales::comma)
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         !is.na(exports_usd),
+         year >= 1995 & year < 2022) %>% 
+  group_by(united_kingdom, year) %>% 
+  summarise(av_exports_usd = mean(exports_usd, na.rm = TRUE)) %>% 
+  arrange(desc(av_exports_usd)) %>% 
+  ggplot() +
+  aes(x = year, y = av_exports_usd, colour = united_kingdom) +
+  geom_point(size = 4, shape = 17)+
+  geom_line(size = 1) +
+  labs(title = "Developed Economies Exports 1995 - 2021",
+       y = "Exports in USD",
+       x = "Year",
+       colour  = "Developed Economies")  +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_colour_manual(values = c("grey", "#86BC25"),
+                      labels = c("Average of Other Countries", "United Kingdom")) +
+  scale_x_continuous(breaks = seq(1995, 2021, 2))
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         year == 2021) %>%
+  ggplot() +
+  aes(x = reorder(country_name, exports_usd), y = exports_usd, fill = united_kingdom == TRUE) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "Exports of Developed Economies in 2021",
+       y = "Exports in USD",
+       x = "Countries") +
+  # scale_y_continuous(labels = scales::comma) +
+  theme_bw() +
+  scale_fill_manual(values = c("FALSE" = "grey",
+                               "TRUE" = "#86BC25"))
+```
+```{r}
+names(deloitte_all_kpis)
+```
+
+```{r}
+uk_ireland <- read_excel("../deloitte_gdp_project/raw_data/uk_ireland_gdp_sector.xlsx")
+```
+
+```{r}
+uk_ireland %>% 
+  ggplot() +
+  aes(x= year, y = agriculture, fill = country) +
+  geom_col(position = "dodge")
+```
+```{r}
+uk_ireland %>% 
+  ggplot() +
+  aes(x= year, y = services, fill = country) +
+  geom_col(position = "dodge")
+```
+```{r}
+uk_ireland %>% 
+  ggplot() +
+  aes(x= year, y = industry, fill = country) +
+  geom_col(position = "dodge")
+```
+
+```{r}
+uk_ireland_piv <- uk_ireland %>% 
+  pivot_longer(cols = c(agriculture, industry, services), names_to = "sector", values_to = "perc_gdp")
+```
+
+
+```{r}
+uk_ireland_piv %>% 
+  ggplot() +
+  aes(x = year, y = perc_gdp, fill = sector) +
+  geom_col() +
+  facet_wrap(~country) +
+  labs(title = "GDP of per Sector Ireland vs United Kingdom",
+       y = "Percentage of GDP",
+       x = "Year",
+       fill = "Sector") +
+  # scale_y_continuous(labels = scales::comma) +
+  theme_bw() +
+  scale_fill_manual(values = c("grey", "black", "#86BC25"),
+                    labels = c("Agriculture", "Industry", "Services")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) 
+  
+```
+
+1.24
+0.89
+0.57
+```{r}
+uk_ireland_piv %>% 
+  filter(sector == "agriculture")
+```
+

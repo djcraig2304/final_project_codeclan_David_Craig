@@ -1,0 +1,211 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(infer)
+
+deloitte_all_kpis <- read_csv("clean_data/deloitte_gdp_kpis.csv")
+```
+```{r}
+deloitte_all_kpis %>%
+  filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>%
+  ggplot(aes(y = gdp_usd, x = united_kingdom)) +
+  geom_boxplot()
+```
+
+
+
+
+
+h0: gdp_uk - gdp_devloped = 0
+ha: gdp_uk - gdp_devloped > 0
+```{r}
+null_distribution <- deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>% 
+  specify(gdp_usd ~ united_kingdom) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("TRUE", "FALSE")) 
+```
+
+```{r}
+null_distribution%>%
+  visualise() +
+  shade_p_value(obs_stat = obs_stat, direction = "right")
+```
+
+
+
+
+```{r}
+obs_stat <- deloitte_all_kpis %>% 
+  filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>% 
+  specify(gdp_usd ~ united_kingdom) %>% 
+  calculate(stat = "diff in means", order = c("TRUE", "FALSE"))
+
+obs_stat
+```
+```{r}
+p_value <- null_distribution %>%
+  get_p_value(obs_stat = obs_stat, direction = "right")
+
+p_value
+```
+## exports
+```{r}
+null_distribution_exp <- deloitte_all_kpis %>% 
+ filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>% 
+  specify(exports_usd ~ united_kingdom) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("TRUE", "FALSE")) 
+```
+
+```{r}
+obs_stat_exp <- deloitte_all_kpis %>%
+  filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>% 
+  specify(exports_usd ~ united_kingdom) %>% 
+  calculate(stat = "diff in means", order = c("TRUE", "FALSE"))
+
+obs_stat_exp
+```
+
+
+```{r}
+null_distribution_exp %>%
+  visualise() +
+  shade_p_value(obs_stat = obs_stat_exp, direction = "right")
+```
+
+```{r}
+p_value_exp <- null_distribution_exp %>%
+  get_p_value(obs_stat = obs_stat_exp, direction = "right")
+
+p_value_exp
+```
+```{r}
+deloitte_all_kpis %>%
+  filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>%
+  ggplot(aes(y = exports_usd, x = united_kingdom)) +
+  geom_boxplot() +
+  labs(y= "Exports in USD",
+       x= "Developed Economies") +
+  scale_x_discrete(labels = c("Other Economies", "UK")) +
+  geom_label(label = "p = 0.003", 
+    x = 1.5,
+    y = 2500000000000,
+    label.padding = unit(0.15, "lines"), 
+    label.size = 0.15,
+    color = "black") +
+  theme_bw()
+```
+
+```{r}
+deloitte_all_kpis %>%
+  filter(developed == TRUE,
+         year >= 1995 & year <= 2021) %>%
+  ggplot(aes(y = gdp_usd, x = united_kingdom)) +
+  geom_boxplot() +
+  labs(y= "GDP in USD",
+       x= "Developed Economies") +
+  scale_x_discrete(labels = c("Other Economies", "UK")) +
+  geom_label(label = "p = 0.102", 
+    x = 1.5,
+    y = 22000000000000,
+    label.padding = unit(0.15, "lines"), 
+    label.size = 0.15,
+    color = "black") +
+  theme_bw()
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(year > 1995,
+         developed == TRUE) %>% 
+  summarise(max = max(gdp_usd, na.rm = TRUE),
+            min = min(gdp_usd, na.rm = TRUE),
+            range = max - min)
+```
+```{r}
+deloitte_all_kpis %>% 
+  filter(year > 1995,
+         developed == FALSE) %>% 
+  summarise(max = max(gdp_usd, na.rm = TRUE),
+            min = min(gdp_usd, na.rm = TRUE),
+            range = max - min)
+```
+```{r}
+(322652239935.6 / 9.652739e+13)	* 100
+```
+
+
+```{r}
+(139891248936.6 / 23295540000000) * 100
+
+(147105800070.0 / 23295540000000) * 100
+
+# 1405710327874 / 322652239935.6
+```
+```{r}
+uk_ireland <- read_excel("../deloitte_gdp_project/raw_data/uk_ireland_gdp_sector.xlsx")
+```
+
+```{r}
+uk_ireland %>% 
+  ggplot() +
+  aes(x= year, y = agriculture, fill = country) +
+  geom_col(position = "dodge")
+```
+```{r}
+uk_ireland %>% 
+  ggplot() +
+  aes(x= year, y = services, fill = country) +
+  geom_col(position = "dodge")
+```
+```{r}
+uk_ireland %>% 
+  ggplot() +
+  aes(x= year, y = industry, fill = country) +
+  geom_col(position = "dodge")
+```
+
+```{r}
+uk_ireland_piv <- uk_ireland %>% 
+  pivot_longer(cols = c(agriculture, industry, services), names_to = "sector", values_to = "perc_gdp")
+```
+
+
+```{r}
+uk_ireland_piv %>% 
+  ggplot() +
+  aes(x = year, y = perc_gdp, fill = sector) +
+  geom_col() +
+  facet_wrap(~country) +
+  labs(title = "GDP of per Sector Ireland vs United Kingdom",
+       y = "Percentage of GDP",
+       x = "Year",
+       fill = "Sector") +
+  # scale_y_continuous(labels = scales::comma) +
+  theme_bw() +
+  scale_fill_manual(values = c("grey", "black", "#86BC25"),
+                    labels = c("Agriculture", "Industry", "Services")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5)) 
+  
+```
+
+1.24
+0.89
+0.57
+```{r}
+uk_ireland_piv %>% 
+  filter(sector == "agriculture")
+```
+
