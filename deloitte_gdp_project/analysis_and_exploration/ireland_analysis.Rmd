@@ -6,9 +6,11 @@ output: html_notebook
 ```{r}
 library(tidyverse)
 library(infer)
+library(readxl)
 
 deloitte_all_kpis <- read_csv("clean_data/deloitte_gdp_kpis.csv")
 ```
+
 ```{r}
 deloitte_all_kpis %>%
   filter(developed == TRUE,
@@ -51,6 +53,7 @@ obs_stat <- deloitte_all_kpis %>%
 
 obs_stat
 ```
+
 ```{r}
 p_value <- null_distribution %>%
   get_p_value(obs_stat = obs_stat, direction = "right")
@@ -154,8 +157,9 @@ deloitte_all_kpis %>%
 
 # 1405710327874 / 322652239935.6
 ```
+
 ```{r}
-uk_ireland <- read_excel("../deloitte_gdp_project/raw_data/uk_ireland_gdp_sector.xlsx")
+uk_ireland <- read_excel("/deloitte_gdp_project/raw_data/uk_ireland_gdp_sector.xlsx")
 ```
 
 ```{r}
@@ -164,6 +168,7 @@ uk_ireland %>%
   aes(x= year, y = agriculture, fill = country) +
   geom_col(position = "dodge")
 ```
+
 ```{r}
 uk_ireland %>% 
   ggplot() +
@@ -201,11 +206,6 @@ uk_ireland_piv %>%
   
 ```
 
-1.24
-0.89
-0.57
-```{r}
-uk_ireland_piv %>% 
-  filter(sector == "agriculture")
-```
+
+
 

@@ -1,0 +1,49 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# **CodeClan Deloitte Data Analysis Project - an exploration of the macroeconomic factors affecting GDP and productivity of developed economies.**
+
+## Introduction
+
+As part of the CodeClan Professional Data Anlysis course I was tasked with choosing a project brief and data set to work on. The main aim of the task was to utilise the skills I had acquired over the course of the bootcamp to answer the brief and provide actionable insights.
+
+The project I chose to work on utilised data from Deloitte, a multinational professional service network. Deloitte provide a wide range of services, including audit, tax, consulting, and financial advisory. The company was founded in 1845 and has its origins in London, United Kingdom. It started as a small accounting firm founded by William Welch Deloitte. Over the years, Deloitte has grown into one of the largest professional services firms globally, with a presence in more than 150 countries. It serves clients across various industries, including technology, finance, healthcare, manufacturing, and more.
+
+The overarching aim of the project brief was to identify insights into Gross Domestic Product(GDP), productivity that may improve the UK productivity. 
+(The full brief is available in the `brief_and_data_dictionary` folder)
+
+The main questions I wished to answer through my analysis were:
+
+- How does the UK compare to other developed economies in terms of GDP and exports? 
+- What factors are important in predicting a country’s GDP? 
+- Can you predict GDP estimates/growth from any of these factors?
+
+## Definitions
+
+Two key definitions in the understanding of this project are as follows:
+
+Gross Domestic Product (GDP) - measure of monetary value of final goods and services produced in a country. Used as an estimator for a country's wealth.
+
+Developed Economies - based on FTSE group defintion which assigns the market status of countries as Developed, Advanced Emerging, Secondary Emerging or Frontier based on their economic size, wealth, quality of markets, depth of markets, breadth of markets. 
+Example countries: United States (USA), Japan (JPN), United Kingdom (GBR), Ireland (IRL) and others (total 24).
+
+## Key Performance Indicators
+
+Based upon research and data sets the key performance indicators (KPIs) to measure were 
+
+- GDP
+- Exports
+- Labour Force Productivity - measures output per labour hour (GDP/ hours worked)
+- Multifactor Productivity – measure of overall efficiency of the utilisation of labour and capital inputs
+
+
+
+
+
+
+
+
+
+

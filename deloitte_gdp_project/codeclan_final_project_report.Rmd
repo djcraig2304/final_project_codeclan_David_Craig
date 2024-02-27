@@ -1,0 +1,121 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Deloitte Project CodeClan
+
+## Context
+
+
+### Business intelligence and data-driven decision making
+
+Deloitte is a multinational professional services network that provides a wide range of services, including audit, tax, consulting, and financial advisory. The company was founded in 1845 and has its origins in London, United Kingdom. It started as a small accounting firm founded by William Welch Deloitte. Over the years, Deloitte has grown into one of the largest professional services firms globally, with a presence in more than 150 countries. It serves clients across various industries, including technology, finance, healthcare, manufacturing, and more.
+
+The project had the following aim:
+- Identify insights into GDP, productivity that may improve the UK productivity . 
+
+During the project I also wished to answer the following questions:
+- How does the UK compare to other developed economies in terms of GDP and exports? 
+- What factors are important in predicting a country’s GDP? 
+- Can you predict GDP estimates/growth from any of these factors?
+
+Gross Domestic Product – measure of monetary value of final goods and services produced in a country. Used as an estimator for a country's wealth.
+
+Developed economies were defined by FTSE group which assigns the market status of countries as Developed, Advanced Emerging, Secondary Emerging or Frontier based on their economic size, wealth, quality of markets, depth of markets, breadth of markets. Examples: United States (USA), Japan (JPN), United Kingdom (GBR), Ireland (IRL) and others.
+ 
+The main insights that can be gained for my analysis include;
+
+- a historical (1995 - 2021) comparison of UK GDP, GDP growth, GDP per capita, exports and productivity versus other developed economies
+- most recent (2021) UK GDP, GDP growth, GDP per capita, exports and productivity rankings among other developed economies.
+- the UK vs Ireland in terms of sector contribution to overall GDP.
+- a multiple linear model that can be used to predict GDP using a country's exports, total population and Foreign investments. 
+- Suggestions of how to enhance UK GDP and Productivity.
+
+### Domain knowledge and the business context
+
+Overall, the aim of Deloitte is to provide exceptional professional services, drive innovation and transformation, uphold ethical behavior, empower their talent, and contribute positively to society and the business community. The analysis will help to inform business activity for Deloitte by providing insights and recommendations into areas for improvement and investment in the UK with the overall objective of improving UK GDP and productivity which can then be utilized to advise government and financial institutions.
+
+
+## Data
+
+### Internal and external data sources
+Internal data sources were provided by Deloitte consisting of  59 excel data files relating to productivity and GDP. These files originally came from the Equifax Ignite Direct data platform consisting of 50 open data source platforms. 
+Further external data sources that provided the most up to data information were gathered from the World Bank website and OECD website.  
+
+### Types of Data
+
+In this project I worked with a  range of data including; numerical(continuous and discrete), logical, character (nominal), and dates. 
+
+- Numerical data consists of numbers and is often used to represent quantities or measurements. There are two main types of numerical data continuous and discrete. Continuous data can take any value within a certain range and is typically represented using decimal numbers. Discrete data, can only take specific, separate values and is typically represented using whole numbers. 
+- Logical data represents true or false statements, also called Boolean values. It's used to express conditions or decisions. 
+- Character data, also referred to as nominal data, represents categories or labels. It includes things like names, colours, or other non-numeric information. 
+- Date data represents specific points in time. It's used to record dates, events, and any other time-related information. 
+
+
+### Data formats
+
+All data files provided by Deloitte were in the form of excel files which were converted to CSV files as part of the cleaning process.
+
+All excel files gathered from 3 data sources, Deloitte, the World Bank and OECD were utilized in the analysis. 
+
+The final cleaned data sets were as follows:
+
+- `clean_gdp_percentage_growth.csv` (15577 rows)
+- `deloitte_gdp_kpis.csv` (16759 rows)
+- `productivity_gdp_hour_worked_clean.csv` (3967 rows)
+- `productivity_multifactor_clean.csv` (831 rows)
+- `uk_ireland_gdp_secotr.excel`(23 rows)
+
+
+### Data Quality and Bias
+
+The quality of the data provided from Deloitte was high however there were some issues in the data. The volume of data was substantial and as such sometimes the excel files were packed with a variety of variables which were difficult to define and extract meaning from. As such I tried my best to stay on brief and select only the variables related to GDP.
+
+## Ethics
+
+
+### Ethical Issues in data sourcing and extraction
+
+As previously mentioned the data was sourced from Deloitte, the World Bank or OECD and did not contain any personal identifiable information or sensitive information pertaining to an individual or businesses. As the data was all open source and related mainly to GDP and economic variables affecting the countries of the world the data should be robust and reliable. However, misreporting or reporting error in data collection cannot be completely ruled out. 
+
+
+### Ethical implications of business requirements
+
+Evaluating GDP and productivity often focuses on economic growth and overall productivity levels. However, this approach may overlook the distribution of wealth within a country. It can lead to a situation where the benefits of increased GDP and productivity affect a small percentage of the population, which may increase income inequality. This raises ethical concerns about fairness, social justice, and the potential for widening the wealth gap. Assessing GDP and productivity without considering their environmental impact can create ethical dilemmas. Pursuing relentless economic growth and productivity without appropriate environmental safeguards can lead to environmental degradation, resource depletion, and climate change. 
+
+
+## Analysis
+
+
+### Stages in the data analysis process
+
+The main stages of the data analysis were as follows:
+
+- Project Research and understanding of key performance variables
+- Data exploration of all the available data and narrowing it down to afew data sets.
+- Data wrangling and cleaning of selected data sets.
+- Data exploration and analysis to answer the brief questions.
+- Data modelling using multiple linear regression. 
+
+### Tools for data analysis
+
+Data cleaning, wrangling, analysis and visualization was performed in `RStudio` using the following packages:
+- `tidyverse`
+- `readxl`
+- `ggplot`
+- `infer`
+- `janitor`
+
+Data modelling was performed in `Anaconda` (`Python`) and `Jupyter` notebooks using the following packages:
+- `pandas`
+- `numpy`
+- `SciKitLearn`
+- `statsmodels.api`
+
+
+### Descriptive, diagnostic, predictive and prescriptive analysis
+
+The analysis provided in this report would be descriptive analytics as I have utilized historical data regarding GDP, exports etc to describe the how the UK has compared both historically and presently to other developed economies. Using these historical data and also comparing data from other countries I was also able to provide some prescriptive analytics and recommended actions to enhance UK GDP and economy. 
+
+
